@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
@@ -19,15 +19,12 @@ function CodeMirrorView() {
   const isSourceMode = useDocumentStore((s) => s.isSourceMode);
   const activeTabId = useWorkspaceStore((s) => s.activeTabId);
   const markDirty = useWorkspaceStore((s) => s.markDirty);
-
-  // Refs for values needed in callbacks to avoid stale closures
   const activeTabIdRef = useRef(activeTabId);
   activeTabIdRef.current = activeTabId;
 
   useEffect(() => {
     if (!containerRef.current || !activeTabId) return;
 
-    // Destroy previous editor instance
     if (viewRef.current) {
       viewRef.current.destroy();
       viewRef.current = null;
@@ -68,9 +65,9 @@ function CodeMirrorView() {
         '.cm-gutters': { display: 'none' },
         '.cm-activeLine': { backgroundColor: 'transparent' },
       }),
+      markdown(),
     ];
 
-    extensions.push(markdown());
     if (!isSourceMode) {
       extensions.push(markdownRenderPlugin);
     }
@@ -81,22 +78,9 @@ function CodeMirrorView() {
     });
 
     viewRef.current = view;
-
-    // Focus editor after a short delay to ensure DOM is ready
-    requestAnimationFrame(() => {
-      view.focus();
-    });
-
-    // Click anywhere in editor area to refocus
-    const handleClick = () => {
-      if (viewRef.current && !viewRef.current.hasFocus) {
-        viewRef.current.focus();
-      }
-    };
-    containerRef.current.addEventListener('click', handleClick);
+    requestAnimationFrame(() => view.focus());
 
     return () => {
-      containerRef.current?.removeEventListener('click', handleClick);
       view.destroy();
       viewRef.current = null;
     };
@@ -108,19 +92,12 @@ function CodeMirrorView() {
         <div className="editor-empty-content">
           <span className="editor-empty-icon">📝</span>
           <span>打开文件开始编辑</span>
-          <span className="editor-empty-hint">Ctrl+O 打开文件夹</span>
         </div>
       </div>
     );
   }
 
-  return (
-    <div
-      ref={containerRef}
-      className="codemirror-container"
-      onClick={() => viewRef.current?.focus()}
-    />
-  );
+  return <div ref={containerRef} className="codemirror-container" />;
 }
 
 export default CodeMirrorView;

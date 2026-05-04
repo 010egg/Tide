@@ -20,10 +20,6 @@ function App() {
         e.preventDefault();
         setShowSearch((v) => !v);
       }
-      if (mod && e.key === 'p') {
-        e.preventDefault();
-        // Quick file open will be added later
-      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

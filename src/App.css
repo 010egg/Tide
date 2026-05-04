@@ -4,14 +4,12 @@
   height: 100%;
   background: var(--bg-primary);
 }
-
 .app-body {
   display: grid;
   grid-template-columns: 220px 1fr 1fr;
   flex: 1;
   min-height: 0;
 }
-
 .sidebar {
   border-right: 0.5px solid var(--border-color);
   background: var(--bg-primary);
@@ -19,7 +17,6 @@
   flex-direction: column;
   overflow-y: auto;
 }
-
 .editor-area {
   border-right: 0.5px solid var(--border-color);
   background: var(--bg-primary);
@@ -27,14 +24,12 @@
   flex-direction: column;
   min-width: 0;
 }
-
 .preview-area {
   background: var(--bg-secondary);
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-
 .terminal-area {
   border-top: 0.5px solid var(--border-color);
   background: var(--terminal-bg);
