@@ -15,6 +15,7 @@ import { useDocumentStore } from './store/document';
 function App() {
   const [showSearch, setShowSearch] = useState(false);
   const openFile = useWorkspaceStore((s) => s.openFile);
+  const activeTabId = useWorkspaceStore((s) => s.activeTabId);
 
   const handleOpenFile = async (path: string) => {
     if (!path.endsWith('.md') && !path.endsWith('.markdown')) return;
@@ -60,7 +61,7 @@ function App() {
       <Titlebar />
       <div className="app-body">
         <div className="sidebar"><FileTree /><Outline /></div>
-        <div className="editor-area"><Tabbar /><CodeMirrorView /></div>
+        <div className="editor-area"><Tabbar /><CodeMirrorView key={activeTabId} /></div>
         <div className="preview-area"><HtmlPreview /></div>
       </div>
       <div className="terminal-area"><XtermView /></div>

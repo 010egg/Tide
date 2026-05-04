@@ -76,20 +76,6 @@ function CodeMirrorView() {
     };
   }, [activeTabId, isSourceMode]);
 
-  // Sync external content changes (file open) into editor
-  useEffect(() => {
-    const view = viewRef.current;
-    if (!view) return;
-    const currentDoc = view.state.doc.toString();
-    if (content !== currentDoc) {
-      isUpdatingRef.current = true;
-      view.dispatch({
-        changes: { from: 0, to: currentDoc.length, insert: content },
-      });
-      isUpdatingRef.current = false;
-    }
-  }, [content]);
-
   if (!activeTabId) {
     return (
       <div className="editor-empty">
