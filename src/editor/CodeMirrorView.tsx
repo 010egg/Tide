@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { EditorState } from '@codemirror/state';
-import { EditorView, keymap, lineNumbers, highlightActiveLine } from '@codemirror/view';
+import { EditorView, keymap, lineNumbers } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { markdown } from '@codemirror/lang-markdown';
@@ -20,21 +20,25 @@ function CodeMirrorView() {
   const activeTabId = useWorkspaceStore((s) => s.activeTabId);
   const markDirty = useWorkspaceStore((s) => s.markDirty);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
+  // Refs for values needed in callbacks to avoid stale closures
+  const activeTabIdRef = useRef(activeTabId);
+  activeTabIdRef.current = activeTabId;
 
+  useEffect(() => {
+    if (!containerRef.current || !activeTabId) return;
+
+    // Destroy previous editor instance
     if (viewRef.current) {
       viewRef.current.destroy();
       viewRef.current = null;
     }
 
-    if (!activeTabId) return;
-
     const updateListener = EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         const newContent = update.state.doc.toString();
         setContent(newContent);
-        if (activeTabId) markDirty(activeTabId, true);
+        const tabId = activeTabIdRef.current;
+        if (tabId) markDirty(tabId, true);
         const pos = update.state.selection.main.head;
         const line = update.state.doc.lineAt(pos);
         setCursor(line.number, pos - line.from + 1);
@@ -43,17 +47,11 @@ function CodeMirrorView() {
 
     const domEventHandlers = EditorView.domEventHandlers({
       compositionstart: () => setComposing(true),
-      compositionend: () => {
-        setComposing(false);
-        if (viewRef.current) {
-          viewRef.current.dispatch({});
-        }
-      },
+      compositionend: () => setComposing(false),
     });
 
     const extensions = [
       lineNumbers(),
-      highlightActiveLine(),
       history(),
       syntaxHighlighting(defaultHighlightStyle),
       keymap.of([...defaultKeymap, ...historyKeymap]),
@@ -72,35 +70,37 @@ function CodeMirrorView() {
       }),
     ];
 
+    extensions.push(markdown());
     if (!isSourceMode) {
-      extensions.push(markdown());
       extensions.push(markdownRenderPlugin);
-    } else {
-      extensions.push(markdown());
     }
 
     const view = new EditorView({
-      state: EditorState.create({
-        doc: content,
-        extensions,
-      }),
+      state: EditorState.create({ doc: content, extensions }),
       parent: containerRef.current,
     });
 
     viewRef.current = view;
-    view.focus();
+
+    // Focus editor after a short delay to ensure DOM is ready
+    requestAnimationFrame(() => {
+      view.focus();
+    });
+
+    // Click anywhere in editor area to refocus
+    const handleClick = () => {
+      if (viewRef.current && !viewRef.current.hasFocus) {
+        viewRef.current.focus();
+      }
+    };
+    containerRef.current.addEventListener('click', handleClick);
 
     return () => {
+      containerRef.current?.removeEventListener('click', handleClick);
       view.destroy();
       viewRef.current = null;
     };
   }, [activeTabId, isSourceMode]);
-
-  useEffect(() => {
-    if (viewRef.current) {
-      viewRef.current.focus();
-    }
-  }, [activeTabId]);
 
   if (!activeTabId) {
     return (
@@ -114,7 +114,13 @@ function CodeMirrorView() {
     );
   }
 
-  return <div ref={containerRef} className="codemirror-container" />;
+  return (
+    <div
+      ref={containerRef}
+      className="codemirror-container"
+      onClick={() => viewRef.current?.focus()}
+    />
+  );
 }
 
 export default CodeMirrorView;
