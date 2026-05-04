@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import 'xterm/css/xterm.css';
@@ -6,111 +6,67 @@ import './XtermView.css';
 
 function XtermView() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const terminalRef = useRef<any>(null);
-  const initializedRef = useRef(false);
-  const [status, setStatus] = useState<'loading' | 'running' | 'error'>('loading');
+  const termRef = useRef<any>(null);
+  const startedRef = useRef(false);
+  const [ready, setReady] = useState(false);
 
-  // Only start terminal when user clicks, to avoid focus stealing
   const startTerminal = async () => {
-    if (!containerRef.current || terminalRef.current) return;
-    initializedRef.current = true;
+    if (startedRef.current || !containerRef.current) return;
+    startedRef.current = true;
 
-    try {
-      const { Terminal } = await import('xterm');
-      const { FitAddon } = await import('@xterm/addon-fit');
+    const { Terminal } = await import('xterm');
+    const { FitAddon } = await import('@xterm/addon-fit');
 
-      const term = new Terminal({
-        cursorBlink: true,
-        fontSize: 12,
-        fontFamily: '"SF Mono", "Fira Code", monospace',
-        rows: 8,
-        theme: {
-          background: '#1F1F1F',
-          foreground: '#E8E8E8',
-          cursor: '#E8E8E8',
-        },
+    const term = new Terminal({
+      cursorBlink: true,
+      fontSize: 13,
+      fontFamily: 'Menlo, "SF Mono", "Fira Code", monospace',
+      theme: { background: '#1F1F1F', foreground: '#E8E8E8', cursor: '#E8E8E8' },
+    });
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(containerRef.current);
+    fitAddon.fit();
+    termRef.current = term;
+
+    term.writeln('\x1b[1;32m● Terminal ready\x1b[0m');
+    term.writeln('Setting up PTY...');
+
+    // Set up listener and spawn in parallel
+    const listenerPromise = listen<string>('pty-output', (event) => {
+      term.write(event.payload);
+    });
+
+    // Forward input
+    term.onData((data: string) => {
+      invoke('pty_write', { data });
+    });
+
+    // Wait for listener then spawn
+    listenerPromise.then(() => {
+      term.writeln('Listener OK, spawning shell...');
+      invoke('pty_spawn').then(() => {
+        setReady(true);
+      }).catch((e) => {
+        term.writeln(`\r\n\x1b[1;31mSpawn failed: ${e}\x1b[0m`);
       });
+    }).catch((e) => {
+      term.writeln(`\r\n\x1b[1;31mListen failed: ${e}\x1b[0m`);
+    });
 
-      const fitAddon = new FitAddon();
-      term.loadAddon(fitAddon);
-
-      const rect = containerRef.current.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) {
-        setStatus('error');
-        term.dispose();
-        return;
-      }
-
-      term.open(containerRef.current);
-      fitAddon.fit();
-      terminalRef.current = term;
-
-      // Listen for PTY output
-      const unlisten = await listen<string>('pty-output', (event) => {
-        if (terminalRef.current) {
-          terminalRef.current.write(event.payload);
-        }
-      });
-
-      // Spawn PTY
-      try {
-        await invoke('pty_spawn');
-        setStatus('running');
-      } catch (e) {
-        term.writeln('\x1b[1;31m  Terminal unavailable\x1b[0m');
-        setStatus('error');
-      }
-
-      // Forward user input to PTY
-      term.onData((data: string) => {
-        invoke('pty_write', { data }).catch(() => {});
-      });
-
-      const handleResize = () => {
-        if (containerRef.current?.getBoundingClientRect().width! > 0) {
-          fitAddon.fit();
-        }
-      };
-      window.addEventListener('resize', handleResize);
-      (term as any)._cleanup = () => {
-        unlisten();
-        window.removeEventListener('resize', handleResize);
-      };
-    } catch (e) {
-      console.error('Terminal init failed:', e);
-      setStatus('error');
-    }
+    const onResize = () => fitAddon.fit();
+    window.addEventListener('resize', onResize);
   };
 
-  useEffect(() => {
-    return () => {
-      if (terminalRef.current) {
-        try {
-          (terminalRef.current as any)._cleanup?.();
-          terminalRef.current.dispose();
-        } catch {}
-        terminalRef.current = null;
-      }
-    };
-  }, []);
-
   return (
-    <div className="xterm-wrap">
+    <div className="xterm-wrap" onClick={() => !startedRef.current && startTerminal()}>
       <div className="terminal-header">
-        <div className="terminal-tab active">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="4 17 10 11 4 5" />
-            <line x1="12" y1="19" x2="20" y2="19" />
-          </svg>
-          终端
-        </div>
+        <span className="terminal-tab active">终端</span>
+        {ready && <span className="terminal-cwd">zsh</span>}
       </div>
-      <div ref={containerRef} className="xterm-container" onClick={startTerminal}>
-        {status === 'loading' && (
-          <div className="terminal-fallback" onClick={startTerminal}>点击启动终端</div>
-        )}
-        {status === 'error' && (
-          <div className="terminal-fallback">终端暂不可用</div>
+      <div ref={containerRef} className="xterm-container">
+        {!startedRef.current && (
+          <div className="terminal-placeholder">点击此处启动终端</div>
         )}
       </div>
     </div>

@@ -12,42 +12,28 @@ import SearchDialog from './search/SearchDialog';
 
 function App() {
   const [showSearch, setShowSearch] = useState(false);
-
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const mod = e.metaKey || e.ctrlKey;
-      if (mod && e.key === 'f') {
-        e.preventDefault();
-        setShowSearch((v) => !v);
+    const h = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault(); setShowSearch(v => !v);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
   }, []);
 
   return (
     <div className="app">
       <Titlebar />
       <div className="app-body">
-        <div className="sidebar">
-          <FileTree />
-          <Outline />
-        </div>
-        <div className="editor-area">
-          <Tabbar />
-          <CodeMirrorView />
-        </div>
-        <div className="preview-area">
-          <HtmlPreview />
-        </div>
+        <div className="sidebar"><FileTree /><Outline /></div>
+        <div className="editor-area"><Tabbar /><CodeMirrorView /></div>
+        <div className="preview-area"><HtmlPreview /></div>
       </div>
-      <div className="terminal-area">
-        <XtermView />
-      </div>
+      <div className="terminal-area"><XtermView /></div>
       <Statusbar />
       {showSearch && <SearchDialog onClose={() => setShowSearch(false)} />}
     </div>
   );
 }
-
 export default App;
