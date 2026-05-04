@@ -1,0 +1,106 @@
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: center;
+  padding-top: 80px;
+  z-index: 1000;
+}
+
+.search-dialog {
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  border: 0.5px solid var(--border-color);
+  box-shadow: var(--shadow-window);
+  padding: 16px;
+  width: 520px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 0.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-family: var(--font-sans);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  outline: none;
+}
+.search-input:focus { border-color: var(--accent); }
+
+.search-count {
+  font-size: var(--font-size-xs);
+  color: var(--text-quaternary);
+  min-width: 60px;
+  text-align: right;
+}
+
+.search-replace-btn {
+  padding: 8px 16px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+.search-replace-btn:hover { opacity: 0.9; }
+
+.search-options {
+  display: flex;
+  gap: 12px;
+}
+
+.search-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.search-results {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: var(--font-size-sm);
+  border-bottom: 0.5px solid var(--border-light);
+}
+
+.search-result-line {
+  color: var(--text-quaternary);
+  min-width: 32px;
+  text-align: right;
+}
+
+.search-result-text {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-result-more {
+  font-size: var(--font-size-xs);
+  color: var(--text-quaternary);
+  padding: 4px 0;
+  text-align: center;
+}

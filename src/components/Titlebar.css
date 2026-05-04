@@ -1,0 +1,25 @@
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--border-color);
+  background: var(--bg-primary);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.titlebar-left {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.titlebar-center {
+  flex: 1;
+}
+
+.titlebar-right {
+  font-size: var(--font-size-xs);
+  color: var(--text-quaternary);
+}

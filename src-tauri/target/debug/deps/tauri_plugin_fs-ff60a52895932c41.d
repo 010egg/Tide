@@ -1,0 +1,11 @@
+/Users/xiaoqin/Tide/src-tauri/target/debug/deps/tauri_plugin_fs-ff60a52895932c41.d: /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/lib.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/commands.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/config.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/desktop.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/error.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/file_path.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/scope.rs
+
+/Users/xiaoqin/Tide/src-tauri/target/debug/deps/libtauri_plugin_fs-ff60a52895932c41.rmeta: /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/lib.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/commands.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/config.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/desktop.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/error.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/file_path.rs /Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/scope.rs
+
+/Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/lib.rs:
+/Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/commands.rs:
+/Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/config.rs:
+/Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/desktop.rs:
+/Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/error.rs:
+/Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/file_path.rs:
+/Users/xiaoqin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-plugin-fs-2.5.1/src/scope.rs:

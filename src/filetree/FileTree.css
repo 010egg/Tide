@@ -1,0 +1,48 @@
+.filetree-section {
+  padding: 12px 8px;
+  flex-shrink: 0;
+}
+
+.filetree-empty {
+  padding: 20px 12px;
+  color: var(--text-quaternary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.sidebar-section-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-quaternary);
+  padding: 0 6px 8px;
+  letter-spacing: 0.06em;
+}
+
+.filetree-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  line-height: 1.6;
+  user-select: none;
+}
+.tree-item:hover { background: var(--border-light); }
+.tree-item.active { background: var(--border-light); color: var(--text-primary); }
+
+.tree-item.indent1 { padding-left: 20px; }
+.tree-item.indent2 { padding-left: 36px; }
+.tree-item.indent3 { padding-left: 52px; }
+
+.caret { font-size: 9px; color: var(--text-quaternary); width: 10px; flex-shrink: 0; }
+.caret-placeholder { width: 10px; flex-shrink: 0; }
+.folder-icon { color: var(--amber); font-size: 13px; }
+.file-icon { color: var(--text-tertiary); font-size: 12px; }
+.tree-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
