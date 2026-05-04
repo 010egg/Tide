@@ -5,30 +5,19 @@ mod commands;
 use commands::{FsWatcher, PtyState};
 use pty::PtyManager;
 use std::sync::Mutex;
+use tauri::Emitter;
+use tauri::Manager;
 
 pub struct OpenedFile(pub Mutex<Option<String>>);
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Check for file path from command-line arguments (macOS open with...)
-    let args: Vec<String> = std::env::args().collect();
-    let opened_file = if args.len() > 1 {
-        let path = &args[1];
-        if path.ends_with(".md") || path.ends_with(".markdown") {
-            Some(path.clone())
-        } else {
-            None
-        }
-    } else {
-        None
-    };
-
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .manage(FsWatcher(Mutex::new(None)))
         .manage(PtyState(Mutex::new(PtyManager::new())))
-        .manage(OpenedFile(Mutex::new(opened_file)))
+        .manage(OpenedFile(Mutex::new(None)))
         .invoke_handler(tauri::generate_handler![
             commands::read_file,
             commands::write_file,
@@ -42,6 +31,23 @@ pub fn run() {
             commands::pty_resize,
             commands::get_opened_file,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            if let tauri::RunEvent::Opened { urls } = event {
+                // macOS sends file URLs when opening files via Finder/"Open With"
+                if let Some(url) = urls.first() {
+                    let path = url.to_file_path()
+                        .map(|p| p.to_string_lossy().to_string())
+                        .unwrap_or_else(|_| url.to_string());
+                    if let Some(state) = app_handle.try_state::<OpenedFile>() {
+                        if let Ok(mut guard) = state.0.lock() {
+                            *guard = Some(path.clone());
+                        }
+                    }
+                    // Also emit event so frontend can react immediately
+                    let _ = app_handle.emit("file-opened", path);
+                }
+            }
+        });
 }

@@ -4,7 +4,7 @@ function Titlebar() {
   return (
     <div className="titlebar" data-tauri-drag-region>
       <div className="titlebar-left">
-        <span className="titlebar-app-name">Typro</span>
+        <span className="titlebar-app-name">Tide</span>
       </div>
       <div className="titlebar-center" data-tauri-drag-region />
       <div className="titlebar-right">

@@ -16,17 +16,30 @@ function App() {
   const [showSearch, setShowSearch] = useState(false);
   const openFile = useWorkspaceStore((s) => s.openFile);
 
+  const handleOpenFile = async (path: string) => {
+    if (!path.endsWith('.md') && !path.endsWith('.markdown')) return;
+    openFile(path);
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const content = await invoke<string>('read_file', { path });
+      useDocumentStore.getState().setContent(content);
+    } catch (e) {
+      console.error('Failed to read file:', e);
+    }
+  };
+
   useEffect(() => {
-    // Handle file opened via macOS "Open With" or double-click
+    // Check if launched with a file (macOS "Open With")
     import('@tauri-apps/api/core').then(({ invoke }) => {
-      invoke<{ path: string } | null>('get_opened_file').then((result: any) => {
-        if (result) {
-          openFile(result);
-          // Load file content
-          invoke('read_file', { path: result }).then((content: any) => {
-            useDocumentStore.getState().setContent(content);
-          });
-        }
+      invoke<string | null>('get_opened_file').then((result: any) => {
+        if (result) handleOpenFile(result);
+      });
+    });
+
+    // Listen for files opened while app is running
+    import('@tauri-apps/api/event').then(({ listen }) => {
+      listen<string>('file-opened', (event) => {
+        handleOpenFile(event.payload);
       });
     });
   }, []);
