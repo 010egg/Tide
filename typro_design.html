@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typro 设计稿</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f4f0; color: #1a1a1a; padding: 40px 24px; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 6px; }
+  .meta { font-size: 13px; color: #888; margin-bottom: 40px; }
+  .section-label { font-size: 12px; color: #888; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .mockup-wrap { background: #f5f4f0; border-radius: 12px; padding: 24px; margin-bottom: 40px; }
+
+  /* Window chrome */
+  .window { background: #fff; border-radius: 12px; border: 0.5px solid #e0ddd6; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.07); }
+  .titlebar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 0.5px solid #e8e5de; background: #fff; }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot-r { background: #FF5F57; }
+  .dot-y { background: #FEBC2E; }
+  .dot-g { background: #28C840; }
+  .titlebar-center { font-size: 12px; color: #888; }
+  .titlebar-right { font-size: 12px; color: #bbb; display: flex; gap: 12px; }
+
+  /* Tabs */
+  .tabbar { display: flex; align-items: center; padding: 0 14px; border-bottom: 0.5px solid #e8e5de; background: #fff; }
+  .tab { padding: 8px 12px; font-size: 12px; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .tab.active { color: #1a1a1a; border-bottom: 1.5px solid #534AB7; }
+  .tab-add { font-size: 14px; color: #bbb; padding: 8px 8px; }
+
+  /* Main layout */
+  .layout { display: grid; grid-template-columns: 200px 1fr 1fr; min-height: 380px; }
+  .sidebar { border-right: 0.5px solid #e8e5de; padding: 12px 8px; background: #fff; }
+  .editor-area { padding: 22px 32px; border-right: 0.5px solid #e8e5de; background: #fff; }
+  .preview-area { display: flex; flex-direction: column; background: #fafaf8; }
+
+  /* Sidebar */
+  .sidebar-section-label { font-size: 11px; color: #bbb; padding: 0 6px 8px; letter-spacing: 0.06em; display: flex; justify-content: space-between; }
+  .tree-item { display: flex; align-items: center; gap: 5px; padding: 3px 6px; font-size: 13px; color: #444; border-radius: 6px; cursor: pointer; line-height: 1.6; }
+  .tree-item:hover { background: #f0ede6; }
+  .tree-item.active { background: #f0ede6; color: #1a1a1a; }
+  .tree-item.indent1 { padding-left: 20px; }
+  .tree-item.indent2 { padding-left: 36px; }
+  .caret { font-size: 9px; color: #bbb; width: 10px; }
+  .folder-icon { color: #BA7517; font-size: 13px; }
+  .file-icon { color: #888; font-size: 12px; }
+  .outline-item { padding: 2px 8px; font-size: 12px; line-height: 1.9; color: #555; cursor: pointer; }
+  .outline-item.h1 { color: #1a1a1a; border-left: 2px solid #534AB7; margin-left: -2px; font-size: 12px; }
+  .outline-item.h2 { padding-left: 18px; color: #555; }
+  .outline-item.h3 { padding-left: 28px; color: #999; font-size: 11px; }
+
+  /* Editor */
+  .editor-h1 { font-size: 24px; font-weight: 500; margin-bottom: 4px; letter-spacing: -0.01em; }
+  .editor-meta { font-size: 12px; color: #bbb; margin-bottom: 20px; }
+  .editor-h2 { font-size: 17px; font-weight: 500; margin-bottom: 10px; }
+  .editor-p { font-size: 14px; line-height: 1.8; color: #1a1a1a; margin-bottom: 14px; }
+  .editor-mark { background: #FAEEDA; padding: 1px 3px; border-radius: 3px; }
+  .editor-ul { font-size: 14px; line-height: 1.9; color: #1a1a1a; margin-bottom: 14px; padding-left: 20px; }
+  .editor-ul li { margin-bottom: 2px; }
+  .editor-blockquote { border-left: 3px solid #ddd; padding: 4px 14px; color: #888; font-size: 13px; font-style: italic; margin-bottom: 14px; }
+  .editor-code { background: #1F1F1F; color: #E8E8E8; font-family: "SF Mono", "Fira Code", monospace; font-size: 12px; padding: 12px 14px; border-radius: 8px; margin-bottom: 14px; line-height: 1.6; }
+  .editor-code .kw { color: #C586C0; }
+  .editor-code .fn { color: #DCDCAA; }
+  .cursor-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; background: #E6F1FB; color: #185FA5; border-radius: 999px; font-size: 11px; }
+  .cursor-dot { width: 5px; height: 5px; border-radius: 50%; background: #185FA5; }
+
+  /* Editor table */
+  .editor-table { width: 100%; font-size: 13px; border-collapse: collapse; margin-bottom: 14px; }
+  .editor-table th { text-align: left; padding: 6px 8px; font-weight: 500; border-bottom: 1px solid #e0ddd6; }
+  .editor-table td { padding: 6px 8px; border-bottom: 0.5px solid #f0ede6; }
+  .badge { display: inline-flex; padding: 1px 8px; border-radius: 999px; font-size: 11px; }
+  .badge-red { background: #FCEBEB; color: #791F1F; }
+  .badge-amber { background: #FAEEDA; color: #633806; }
+
+  /* Preview */
+  .preview-tabs { display: flex; align-items: center; padding: 0 12px; border-bottom: 0.5px solid #e8e5de; background: #fff; }
+  .preview-tab { padding: 8px 0; font-size: 12px; color: #bbb; margin-right: 14px; cursor: pointer; }
+  .preview-tab.active { color: #1a1a1a; border-bottom: 1.5px solid #534AB7; }
+  .preview-sync { margin-left: auto; font-size: 11px; color: #bbb; }
+  .preview-content { padding: 18px 22px; flex: 1; background: white; font-size: 13px; }
+  .preview-content h1 { font-size: 18px; font-weight: 500; margin-bottom: 4px; color: #1a1a1a; }
+  .preview-content .preview-meta { font-size: 11px; color: #999; margin-bottom: 14px; }
+  .preview-content h2 { font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #1a1a1a; }
+  .preview-content ul { font-size: 12px; line-height: 1.8; color: #333; padding-left: 16px; margin-bottom: 10px; }
+  .preview-table { width: 100%; font-size: 11px; border-collapse: collapse; border: 0.5px solid #e8e5de; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+  .preview-table th { background: #f5f4f0; padding: 5px 8px; border-bottom: 0.5px solid #e8e5de; text-align: left; }
+  .preview-table td { padding: 5px 8px; border-bottom: 0.5px solid #f5f4f0; }
+  .preview-p0 { color: #A32D2D; }
+  .preview-p1 { color: #854F0B; }
+
+  /* Terminal */
+  .terminal-wrap { border-top: 0.5px solid #e8e5de; background: #1F1F1F; }
+  .terminal-tabs { display: flex; align-items: center; padding: 0 12px; border-bottom: 0.5px solid #333; }
+  .terminal-tab { display: flex; align-items: center; gap: 5px; padding: 8px 0; font-size: 12px; color: #e8e8e8; border-bottom: 1.5px solid #534AB7; margin-right: 12px; }
+  .terminal-tab-add { font-size: 12px; color: #666; padding: 8px 0; }
+  .terminal-cwd { margin-left: auto; font-size: 11px; color: #666; padding: 8px 0; }
+  .terminal-body { padding: 12px 14px; font-family: "SF Mono", "Fira Code", monospace; font-size: 12px; line-height: 1.7; color: #e8e8e8; min-height: 120px; }
+  .t-green { color: #5DCAA5; }
+  .t-blue { color: #85B7EB; }
+  .t-gray { color: #888; }
+  .t-red { color: #F0997B; }
+  .t-cursor { display: inline-block; width: 7px; height: 13px; background: #e8e8e8; vertical-align: middle; }
+
+  /* Statusbar */
+  .statusbar { display: flex; align-items: center; justify-content: space-between; padding: 5px 14px; background: #f5f4f0; font-size: 11px; color: #bbb; border-top: 0.5px solid #e8e5de; }
+
+  /* Section 2: Inline rendering states */
+  .states-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .state-card { background: #fff; border-radius: 10px; border: 0.5px solid #e8e5de; padding: 16px; }
+  .state-label { font-size: 11px; color: #bbb; margin-bottom: 10px; letter-spacing: 0.06em; }
+  .state-content { font-size: 14px; line-height: 1.8; color: #1a1a1a; }
+  .src-sym { color: #bbb; }
+  .src-mark { background: #FAEEDA; }
+  .blink-cursor { display: inline-block; width: 1.5px; height: 15px; background: #534AB7; vertical-align: middle; margin-left: 1px; animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0} }
+  .state-note { font-size: 11px; color: #bbb; margin-top: 10px; }
+  .rendered-bold { font-weight: 500; }
+  .katex-formula { text-align: center; padding: 6px 0; font-size: 16px; }
+  .katex-note { font-size: 11px; color: #bbb; text-align: center; margin-top: 8px; }
+
+  .inline-note { padding: 12px 14px; background: #fff; border-radius: 8px; border: 0.5px solid #e8e5de; }
+  .inline-note-label { font-size: 11px; color: #bbb; margin-bottom: 6px; letter-spacing: 0.06em; }
+  .inline-note-text { font-size: 13px; color: #555; line-height: 1.7; }
+
+  svg text { fill: currentColor; }
+</style>
+</head>
+<body>
+
+<h1>Typro 设计稿</h1>
+<p class="meta">MVP · 极简白风格 · 2026</p>
+
+<!-- ── 设计稿 1：主界面 ── -->
+<div class="mockup-wrap">
+  <div class="section-label">主界面 v2 · 文件树 + 编辑器 + HTML 预览 + 终端</div>
+  <div class="window">
+
+    <!-- Titlebar -->
+    <div class="titlebar">
+      <div class="dots">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+      </div>
+      <div class="tabbar" style="flex:1;margin:0 14px;padding:0;border:none;">
+        <div class="tab active">设计稿.md <span style="color:#bbb;margin-left:4px;">×</span></div>
+        <div class="tab">README.md</div>
+        <div class="tab-add">+</div>
+      </div>
+      <div class="titlebar-right"><span>已保存</span></div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="layout">
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-section-label">工作区 <span>+ ↻</span></div>
+        <div class="tree-item"><span class="caret">▼</span><span class="folder-icon">📁</span>my-notes</div>
+        <div class="tree-item indent1"><span class="caret">▶</span><span class="folder-icon">📁</span>assets</div>
+        <div class="tree-item indent1"><span class="caret">▼</span><span class="folder-icon">📁</span>项目</div>
+        <div class="tree-item indent2 active"><span class="file-icon">📄</span>设计稿.md</div>
+        <div class="tree-item indent2"><span class="file-icon">📄</span>README.md</div>
+        <div class="tree-item indent2"><span class="file-icon">📄</span>roadmap.md</div>
+        <div class="tree-item indent1"><span class="caret">▶</span><span class="folder-icon">📁</span>读书笔记</div>
+        <div class="tree-item"><span class="file-icon">📄</span>todo.md</div>
+
+        <div style="margin-top:14px;padding:0 6px;">
+          <div class="sidebar-section-label">大纲</div>
+          <div class="outline-item h1">Typro MVP</div>
+          <div class="outline-item h2">核心定位</div>
+          <div class="outline-item h2">功能范围</div>
+          <div class="outline-item h2">技术选型</div>
+        </div>
+      </div>
+
+      <!-- Editor -->
+      <div class="editor-area">
+        <div class="editor-h1">Typro MVP</div>
+        <div class="editor-meta">设计稿.md</div>
+
+        <div class="editor-h2">功能范围</div>
+        <div style="font-size:14px;line-height:1.9;margin-bottom:14px;">
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:2px;">
+            <span style="display:inline-block;width:14px;height:14px;border:1.2px solid #1D9E75;border-radius:3px;background:#1D9E75;flex-shrink:0;margin-top:4px;text-align:center;line-height:14px;color:white;font-size:10px;">✓</span>
+            <span style="color:#bbb;text-decoration:line-through;">实时渲染</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:2px;">
+            <span style="display:inline-block;width:14px;height:14px;border:1.2px solid #1D9E75;border-radius:3px;background:#1D9E75;flex-shrink:0;margin-top:4px;text-align:center;line-height:14px;color:white;font-size:10px;">✓</span>
+            <span style="color:#bbb;text-decoration:line-through;">文件夹树</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:2px;">
+            <span style="display:inline-block;width:14px;height:14px;border:1.2px solid #ccc;border-radius:3px;flex-shrink:0;margin-top:4px;"></span>
+            <span>HTML 预览面板</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <span style="display:inline-block;width:14px;height:14px;border:1.2px solid #ccc;border-radius:3px;flex-shrink:0;margin-top:4px;"></span>
+            <span>集成终端</span>
+          </div>
+        </div>
+
+        <div class="editor-h2">优先级表</div>
+        <table class="editor-table">
+          <thead><tr><th>功能</th><th>优先级</th></tr></thead>
+          <tbody>
+            <tr><td>实时渲染</td><td><span class="badge badge-red">P0</span></td></tr>
+            <tr><td>终端集成</td><td><span class="badge badge-amber">P1</span></td></tr>
+          </tbody>
+        </table>
+
+        <div class="cursor-badge"><span class="cursor-dot"></span>光标段落 · 实时聚焦</div>
+      </div>
+
+      <!-- Preview -->
+      <div class="preview-area">
+        <div class="preview-tabs">
+          <div class="preview-tab active">HTML 预览</div>
+          <div class="preview-tab">源码</div>
+          <div class="preview-sync">↻ 自动同步</div>
+        </div>
+        <div class="preview-content">
+          <h1>Typro MVP</h1>
+          <div class="preview-meta">设计稿.md</div>
+          <h2>功能范围</h2>
+          <ul>
+            <li><s style="color:#bbb;">实时渲染</s></li>
+            <li><s style="color:#bbb;">文件夹树</s></li>
+            <li>HTML 预览面板</li>
+            <li>集成终端</li>
+          </ul>
+          <h2>优先级表</h2>
+          <table class="preview-table">
+            <thead><tr><th>功能</th><th>优先级</th></tr></thead>
+            <tbody>
+              <tr><td>实时渲染</td><td class="preview-p0">P0</td></tr>
+              <tr><td>终端集成</td><td class="preview-p1">P1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal-wrap">
+      <div class="terminal-tabs">
+        <div class="terminal-tab">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          终端 <span style="color:#666;margin-left:4px;">×</span>
+        </div>
+        <div class="terminal-tab-add">+ 新建</div>
+        <div class="terminal-cwd">zsh · my-notes</div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-green">winnie@mac</span> <span class="t-blue">my-notes</span> <span class="t-gray">(main)</span> $ git status</div>
+        <div style="color:#bbb;">On branch main</div>
+        <div style="color:#bbb;">Changes not staged for commit:</div>
+        <div class="t-red" style="padding-left:16px;">modified:   设计稿.md</div>
+        <div style="margin-top:6px;"><span class="t-green">winnie@mac</span> <span class="t-blue">my-notes</span> <span class="t-gray">(main)</span> $ <span class="t-cursor"></span></div>
+      </div>
+    </div>
+
+    <!-- Statusbar -->
+    <div class="statusbar">
+      <div style="display:flex;gap:12px;"><span>Markdown</span><span>UTF-8</span><span>1,284 字</span></div>
+      <div style="display:flex;gap:12px;"><span>预览：分屏</span><span>主题：默认</span><span>行 24，列 18</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 设计稿 2：实时渲染状态 ── -->
+<div class="mockup-wrap">
+  <div class="section-label">实时渲染交互 · 三种状态</div>
+
+  <div class="states-grid">
+    <div class="state-card">
+      <div class="state-label">① 输入中</div>
+      <div class="state-content" style="font-family:'SF Mono','Fira Code',monospace;">
+        这是 <span class="src-sym">**</span><span class="src-mark">重点</span><span class="src-sym">**</span> 内容<span class="blink-cursor"></span>
+      </div>
+      <div class="state-note">符号可见 · 光标所在段落</div>
+    </div>
+    <div class="state-card">
+      <div class="state-label">② 失焦后</div>
+      <div class="state-content">
+        这是 <span class="rendered-bold">重点</span> 内容
+      </div>
+      <div class="state-note">纯净显示 · 符号隐藏</div>
+    </div>
+    <div class="state-card">
+      <div class="state-label">③ 公式块</div>
+      <div class="katex-formula"><i>E</i> = <i>mc</i><sup style="font-size:11px;">2</sup></div>
+      <div class="katex-note">KaTeX 实时渲染</div>
+    </div>
+  </div>
+
+  <div class="inline-note">
+    <div class="inline-note-label">交互逻辑</div>
+    <div class="inline-note-text">光标进入段落 → 显示 markdown 源码符号；光标离开段落 → 隐藏符号、显示渲染结果。一切都在同一个视图里完成，没有「编辑 / 预览」切换按钮。</div>
+  </div>
+</div>
+
+</body>
+</html>
