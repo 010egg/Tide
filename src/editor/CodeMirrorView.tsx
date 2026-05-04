@@ -12,6 +12,8 @@ import './CodeMirrorView.css';
 function CodeMirrorView() {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const isUpdatingRef = useRef(false);
+
   const content = useDocumentStore((s) => s.content);
   const setContent = useDocumentStore((s) => s.setContent);
   const setCursor = useDocumentStore((s) => s.setCursor);
@@ -19,9 +21,8 @@ function CodeMirrorView() {
   const isSourceMode = useDocumentStore((s) => s.isSourceMode);
   const activeTabId = useWorkspaceStore((s) => s.activeTabId);
   const markDirty = useWorkspaceStore((s) => s.markDirty);
-  const activeTabIdRef = useRef(activeTabId);
-  activeTabIdRef.current = activeTabId;
 
+  // Create editor when tab changes
   useEffect(() => {
     if (!containerRef.current || !activeTabId) return;
 
@@ -31,20 +32,14 @@ function CodeMirrorView() {
     }
 
     const updateListener = EditorView.updateListener.of((update) => {
-      if (update.docChanged) {
+      if (update.docChanged && !isUpdatingRef.current) {
         const newContent = update.state.doc.toString();
         setContent(newContent);
-        const tabId = activeTabIdRef.current;
-        if (tabId) markDirty(tabId, true);
+        if (activeTabId) markDirty(activeTabId, true);
         const pos = update.state.selection.main.head;
         const line = update.state.doc.lineAt(pos);
         setCursor(line.number, pos - line.from + 1);
       }
-    });
-
-    const domEventHandlers = EditorView.domEventHandlers({
-      compositionstart: () => setComposing(true),
-      compositionend: () => setComposing(false),
     });
 
     const extensions = [
@@ -53,24 +48,19 @@ function CodeMirrorView() {
       syntaxHighlighting(defaultHighlightStyle),
       keymap.of([...defaultKeymap, ...historyKeymap]),
       updateListener,
-      domEventHandlers,
+      EditorView.domEventHandlers({
+        compositionstart: () => setComposing(true),
+        compositionend: () => setComposing(false),
+      }),
+      markdown(),
+      ...(isSourceMode ? [] : [markdownRenderPlugin]),
       EditorView.theme({
         '&': { height: '100%', flex: 1 },
         '.cm-scroller': { overflow: 'auto', fontFamily: 'var(--font-sans)' },
-        '.cm-content': {
-          padding: '22px 32px',
-          fontSize: 'var(--font-size-base)',
-          lineHeight: 'var(--line-height-base)',
-        },
+        '.cm-content': { padding: '22px 32px', fontSize: 'var(--font-size-base)', lineHeight: 'var(--line-height-base)' },
         '.cm-gutters': { display: 'none' },
-        '.cm-activeLine': { backgroundColor: 'transparent' },
       }),
-      markdown(),
     ];
-
-    if (!isSourceMode) {
-      extensions.push(markdownRenderPlugin);
-    }
 
     const view = new EditorView({
       state: EditorState.create({ doc: content, extensions }),
@@ -86,11 +76,24 @@ function CodeMirrorView() {
     };
   }, [activeTabId, isSourceMode]);
 
+  // Sync external content changes (file open) into editor
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    const currentDoc = view.state.doc.toString();
+    if (content !== currentDoc) {
+      isUpdatingRef.current = true;
+      view.dispatch({
+        changes: { from: 0, to: currentDoc.length, insert: content },
+      });
+      isUpdatingRef.current = false;
+    }
+  }, [content]);
+
   if (!activeTabId) {
     return (
       <div className="editor-empty">
         <div className="editor-empty-content">
-          <span className="editor-empty-icon">📝</span>
           <span>打开文件开始编辑</span>
         </div>
       </div>
