@@ -48,3 +48,12 @@
   min-height: 0;
   padding: 4px;
 }
+
+.terminal-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  font-size: var(--font-size-sm);
+}

@@ -54,10 +54,17 @@ function buildFileTree(entries: { name: string; path: string; isDir: boolean }[]
   return root;
 }
 
+const defaultTab: Tab = {
+  id: crypto.randomUUID(),
+  title: '未命名',
+  path: '',
+  isDirty: false,
+};
+
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   rootPath: null,
-  tabs: [],
-  activeTabId: null,
+  tabs: [defaultTab],
+  activeTabId: defaultTab.id,
   fileTree: [],
 
   setRootPath: (path) => set({ rootPath: path }),
