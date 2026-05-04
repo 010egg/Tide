@@ -18,11 +18,12 @@ function App() {
 
   const handleOpenFile = async (path: string) => {
     if (!path.endsWith('.md') && !path.endsWith('.markdown')) return;
-    openFile(path);
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const content = await invoke<string>('read_file', { path });
+      // Set content BEFORE opening tab so editor gets it on creation
       useDocumentStore.getState().setContent(content);
+      openFile(path);
     } catch (e) {
       console.error('Failed to read file:', e);
     }
