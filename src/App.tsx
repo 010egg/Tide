@@ -9,9 +9,28 @@ import HtmlPreview from './preview/HtmlPreview';
 import XtermView from './terminal/XtermView';
 import Statusbar from './components/Statusbar';
 import SearchDialog from './search/SearchDialog';
+import { useWorkspaceStore } from './store/workspace';
+import { useDocumentStore } from './store/document';
 
 function App() {
   const [showSearch, setShowSearch] = useState(false);
+  const openFile = useWorkspaceStore((s) => s.openFile);
+
+  useEffect(() => {
+    // Handle file opened via macOS "Open With" or double-click
+    import('@tauri-apps/api/core').then(({ invoke }) => {
+      invoke<{ path: string } | null>('get_opened_file').then((result: any) => {
+        if (result) {
+          openFile(result);
+          // Load file content
+          invoke('read_file', { path: result }).then((content: any) => {
+            useDocumentStore.getState().setContent(content);
+          });
+        }
+      });
+    });
+  }, []);
+
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {

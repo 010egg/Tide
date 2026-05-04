@@ -69,3 +69,9 @@ pub fn pty_resize(state: State<'_, PtyState>, rows: u16, cols: u16) -> Result<()
     let manager = state.0.lock().map_err(|e| e.to_string())?;
     manager.resize(rows, cols)
 }
+
+#[tauri::command]
+pub fn get_opened_file(state: State<'_, crate::OpenedFile>) -> Result<Option<String>, String> {
+    let guard = state.0.lock().map_err(|e| e.to_string())?;
+    Ok(guard.clone())
+}
