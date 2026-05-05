@@ -1,38 +1,35 @@
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: var(--bg-primary);
+.app { display: flex; flex-direction: column; height: 100%; background: var(--bg-primary); }
+.app-body { display: grid; flex: 1; min-height: 0; overflow: hidden; }
+.sidebar { border-right: 0.5px solid var(--border-color); background: var(--bg-primary); display: flex; flex-direction: column; overflow-y: auto; }
+.editor-area { border-right: 0.5px solid var(--border-color); background: var(--bg-primary); display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.preview-area { background: var(--bg-secondary); display: flex; flex-direction: column; min-width: 0; }
+.terminal-area { border-top: 0.5px solid var(--border-color); background: var(--terminal-bg); min-height: 0; overflow: hidden; }
+
+.editor-top-row { display: flex; align-items: center; border-bottom: 0.5px solid var(--border-color); }
+.editor-top-row .tabbar { border-bottom: none; flex: 1; }
+
+.toggle-btn {
+  background: none; border: none; color: var(--text-quaternary);
+  font-size: 10px; cursor: pointer; padding: 4px 8px; line-height: 1;
 }
-.app-body {
-  display: grid;
-  grid-template-columns: 220px 1fr 1fr;
-  flex: 1;
-  min-height: 0;
-}
-.sidebar {
-  border-right: 0.5px solid var(--border-color);
-  background: var(--bg-primary);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-.editor-area {
-  border-right: 0.5px solid var(--border-color);
-  background: var(--bg-primary);
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.preview-area {
-  background: var(--bg-secondary);
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.terminal-area {
+.toggle-btn:hover { color: var(--text-primary); }
+
+.terminal-resize-handle {
+  height: 6px; background: var(--border-color); cursor: ns-resize;
+  display: flex; align-items: center; justify-content: center;
+  user-select: none; -webkit-user-select: none;
   border-top: 0.5px solid var(--border-color);
-  background: var(--terminal-bg);
-  min-height: 150px;
-  max-height: 300px;
 }
+.terminal-resize-handle:hover { background: var(--accent-light); }
+.terminal-handle-label {
+  font-size: 9px; color: var(--text-quaternary); cursor: pointer;
+  padding: 0 4px; line-height: 1;
+}
+.terminal-handle-label:hover { color: var(--text-primary); }
+
+.terminal-toggle {
+  text-align: center; padding: 4px; font-size: var(--font-size-xs);
+  color: var(--text-quaternary); cursor: pointer;
+  border-top: 0.5px solid var(--border-color); background: var(--bg-tertiary);
+}
+.terminal-toggle:hover { color: var(--text-primary); }

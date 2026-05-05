@@ -77,10 +77,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     }
     const id = crypto.randomUUID();
     const name = path.split('/').pop() || path;
-    set((s) => ({
-      tabs: [...s.tabs, { id, title: name, path, isDirty: false }],
-      activeTabId: id,
-    }));
+    set((s) => {
+      // Remove empty untitled tab(s) when opening a real file
+      const cleanTabs = s.tabs.filter((t) => t.path !== '' || t.isDirty);
+      return {
+        tabs: [...cleanTabs, { id, title: name, path, isDirty: false }],
+        activeTabId: id,
+      };
+    });
   },
 
   setActiveTab: (id) => set({ activeTabId: id }),

@@ -22,14 +22,9 @@ function CodeMirrorView() {
   const activeTabId = useWorkspaceStore((s) => s.activeTabId);
   const markDirty = useWorkspaceStore((s) => s.markDirty);
 
-  // Create editor when tab changes
   useEffect(() => {
     if (!containerRef.current || !activeTabId) return;
-
-    if (viewRef.current) {
-      viewRef.current.destroy();
-      viewRef.current = null;
-    }
+    if (viewRef.current) { viewRef.current.destroy(); viewRef.current = null; }
 
     const updateListener = EditorView.updateListener.of((update) => {
       if (update.docChanged && !isUpdatingRef.current) {
@@ -43,8 +38,7 @@ function CodeMirrorView() {
     });
 
     const extensions = [
-      lineNumbers(),
-      history(),
+      lineNumbers(), history(),
       syntaxHighlighting(defaultHighlightStyle),
       keymap.of([...defaultKeymap, ...historyKeymap]),
       updateListener,
@@ -60,6 +54,7 @@ function CodeMirrorView() {
         '.cm-content': { padding: '22px 32px', fontSize: 'var(--font-size-base)', lineHeight: 'var(--line-height-base)' },
         '.cm-gutters': { display: 'none' },
         '.cm-code-hidden': { display: 'none' },
+        '.cm-line-hidden': { display: 'none' },
       }),
     ];
 
@@ -67,24 +62,35 @@ function CodeMirrorView() {
       state: EditorState.create({ doc: content, extensions }),
       parent: containerRef.current,
     });
-
     viewRef.current = view;
     requestAnimationFrame(() => view.focus());
 
+    // Listen for outline jump events
+    const onJump = (e: Event) => {
+      const { line } = (e as CustomEvent).detail;
+      if (viewRef.current) {
+        const doc = viewRef.current.state.doc;
+        if (line >= 1 && line <= doc.lines) {
+          const pos = doc.line(line).from;
+          viewRef.current.dispatch({
+            selection: { anchor: pos, head: pos },
+            scrollIntoView: true,
+          });
+          viewRef.current.focus();
+        }
+      }
+    };
+    window.addEventListener('editor-jump', onJump);
+
     return () => {
+      window.removeEventListener('editor-jump', onJump);
       view.destroy();
       viewRef.current = null;
     };
   }, [activeTabId, isSourceMode]);
 
   if (!activeTabId) {
-    return (
-      <div className="editor-empty">
-        <div className="editor-empty-content">
-          <span>打开文件开始编辑</span>
-        </div>
-      </div>
-    );
+    return <div className="editor-empty"><div className="editor-empty-content"><span>打开文件开始编辑</span></div></div>;
   }
 
   return <div ref={containerRef} className="codemirror-container" />;

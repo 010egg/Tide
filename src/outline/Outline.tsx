@@ -13,11 +13,7 @@ function extractHeadings(content: string): Heading[] {
   for (let i = 0; i < lines.length; i++) {
     const match = lines[i].match(/^(#{1,6})\s+(.+)/);
     if (match) {
-      headings.push({
-        level: match[1].length,
-        text: match[2],
-        line: i + 1,
-      });
+      headings.push({ level: match[1].length, text: match[2], line: i + 1 });
     }
   }
   return headings;
@@ -26,6 +22,11 @@ function extractHeadings(content: string): Heading[] {
 function Outline() {
   const content = useDocumentStore((s) => s.content);
   const headings = extractHeadings(content);
+
+  const jumpTo = (line: number) => {
+    // Dispatch event that CodeMirrorView listens to
+    window.dispatchEvent(new CustomEvent('editor-jump', { detail: { line } }));
+  };
 
   if (headings.length === 0) {
     return (
@@ -41,11 +42,7 @@ function Outline() {
       <div className="outline-label">大纲</div>
       <div className="outline-list">
         {headings.map((h, i) => (
-          <div
-            key={i}
-            className={`outline-item h${Math.min(h.level, 3)}`}
-            title={h.text}
-          >
+          <div key={i} className={`outline-item h${Math.min(h.level, 3)}`} onClick={() => jumpTo(h.line)} title={h.text}>
             {h.text}
           </div>
         ))}
