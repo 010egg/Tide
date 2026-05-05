@@ -59,6 +59,7 @@ function CodeMirrorView() {
         '.cm-scroller': { overflow: 'auto', fontFamily: 'var(--font-sans)' },
         '.cm-content': { padding: '22px 32px', fontSize: 'var(--font-size-base)', lineHeight: 'var(--line-height-base)' },
         '.cm-gutters': { display: 'none' },
+        '.cm-code-hidden': { display: 'none' },
       }),
     ];
 

@@ -3,7 +3,7 @@ import { Range } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 class CodeBlockWidget extends WidgetType {
-  constructor(readonly code: string, readonly lang: string) {
+  constructor(readonly code: string, readonly lang: string, readonly lines: number) {
     super();
   }
   eq(other: CodeBlockWidget): boolean {
@@ -21,6 +21,7 @@ class CodeBlockWidget extends WidgetType {
     wrap.style.lineHeight = '1.6';
     wrap.style.whiteSpace = 'pre-wrap';
     wrap.style.overflow = 'hidden';
+    wrap.style.display = 'block';
 
     if (this.lang) {
       const header = document.createElement('div');
@@ -45,20 +46,34 @@ export function codeBlockDecorations(view: EditorView): Range<Decoration>[] {
 
   tree.iterate({
     enter(nodeRef) {
-      if (nodeRef.name === 'FencedCode') {
-        if (cursor >= nodeRef.from && cursor <= nodeRef.to) return;
+      if (nodeRef.name !== 'FencedCode') return;
+      if (cursor >= nodeRef.from && cursor <= nodeRef.to) return;
 
-        const text = view.state.doc.sliceString(nodeRef.from, nodeRef.to);
-        const lines = text.split('\n');
-        const info = lines[0].replace(/^```\s*/, '');
-        const code = lines.slice(1, -1).join('\n');
+      const doc = view.state.doc;
+      const fromLine = doc.lineAt(nodeRef.from).number;
+      const toLine = doc.lineAt(nodeRef.to).number;
+      const lineCount = toLine - fromLine + 1;
 
-        widgets.push(
-          Decoration.replace({
-            widget: new CodeBlockWidget(code, info),
-          }).range(nodeRef.from, nodeRef.to)
-        );
+      // Only render if cursor is completely outside
+      const text = doc.sliceString(nodeRef.from, nodeRef.to);
+      const lines = text.split('\n');
+      const info = lines[0].replace(/^```\s*/, '');
+      const code = lines.slice(1, -1).join('\n');
+
+      // Use widget decoration covering the first character, but replace placeholder
+      // with block widget. The hidden lines use line decoration.
+      for (let i = fromLine; i < toLine; i++) {
+        const line = doc.line(i);
+        widgets.push(Decoration.line({ class: 'cm-code-hidden' }).range(line.from));
       }
+
+      const startLine = doc.line(nodeRef.from);
+      widgets.push(
+        Decoration.replace({
+          widget: new CodeBlockWidget(code, info, lineCount),
+          block: true,
+        }).range(startLine.from, startLine.from)
+      );
     },
   });
 
