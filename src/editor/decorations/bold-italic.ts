@@ -3,20 +3,11 @@ import { Range } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 class StyledTextWidget extends WidgetType {
-  constructor(readonly text: string, readonly style: 'bold' | 'italic') {
-    super();
-  }
-  eq(other: StyledTextWidget): boolean {
-    return other.text === this.text && other.style === this.style;
-  }
+  constructor(readonly text: string, readonly tag: 'strong' | 'em') { super(); }
+  eq(other: StyledTextWidget): boolean { return other.text === this.text && other.tag === this.tag; }
   toDOM(): HTMLElement {
-    const el = document.createElement('span');
+    const el = document.createElement(this.tag);
     el.textContent = this.text;
-    if (this.style === 'bold') {
-      el.style.fontWeight = '600';
-    } else {
-      el.style.fontStyle = 'italic';
-    }
     return el;
   }
 }
@@ -28,19 +19,23 @@ export function boldItalicDecorations(view: EditorView): Range<Decoration>[] {
 
   tree.iterate({
     enter(nodeRef) {
-      if (nodeRef.name === 'StrongEmphasis' || nodeRef.name === 'Emphasis') {
-        if (cursor >= nodeRef.from && cursor <= nodeRef.to) return;
+      if (nodeRef.name !== 'StrongEmphasis' && nodeRef.name !== 'Emphasis') return;
+      if (cursor >= nodeRef.from && cursor <= nodeRef.to) return;
 
-        const text = view.state.doc.sliceString(nodeRef.from, nodeRef.to);
-        const stripped = text.replace(/^(\*{1,2}|_{1,2})/, '').replace(/(\*{1,2}|_{1,2})$/, '');
-        const isBold = nodeRef.name === 'StrongEmphasis';
-
-        widgets.push(
-          Decoration.replace({
-            widget: new StyledTextWidget(stripped, isBold ? 'bold' : 'italic'),
-          }).range(nodeRef.from, nodeRef.to)
-        );
+      const raw = view.state.doc.sliceString(nodeRef.from, nodeRef.to);
+      // Strip markdown markers: ** ** or * * or __ __ or _ _
+      const markers = ['**', '__', '*', '_'];
+      let text = raw;
+      for (const m of markers) {
+        if (text.startsWith(m) && text.endsWith(m)) {
+          text = text.slice(m.length, -m.length);
+          break;
+        }
       }
+
+      widgets.push(Decoration.replace({
+        widget: new StyledTextWidget(text, nodeRef.name === 'StrongEmphasis' ? 'strong' : 'em'),
+      }).range(nodeRef.from, nodeRef.to));
     },
   });
 

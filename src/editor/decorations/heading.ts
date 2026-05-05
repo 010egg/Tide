@@ -6,19 +6,18 @@ class HeadingWidget extends WidgetType {
   constructor(readonly level: number, readonly text: string) { super(); }
   eq(other: HeadingWidget): boolean { return other.level === this.level && other.text === this.text; }
   toDOM(): HTMLElement {
-    const el = document.createElement('span');
-    const sizes = ['', '28px', '22px', '18px', '16px', '15px', '14px'];
-    const margins = ['', '16px 0 8px', '14px 0 6px', '10px 0 4px', '8px 0 2px', '6px 0 2px', '4px 0 2px'];
-    el.style.fontSize = sizes[this.level] || '14px';
-    el.style.fontWeight = '600';
-    el.style.display = 'block';
-    el.style.margin = margins[this.level] || '4px 0 2px';
-    el.style.color = 'var(--text-primary)';
-    el.style.lineHeight = '1.3';
-    if (this.level <= 2) {
-      el.style.borderBottom = '0.5px solid var(--border-light)';
-      el.style.paddingBottom = '6px';
-    }
+    const tag = `h${this.level}` as keyof HTMLElementTagNameMap;
+    const el = document.createElement(tag);
+    Object.assign(el.style, {
+      fontSize: ['', '28px', '22px', '18px', '16px', '15px', '14px'][this.level],
+      fontWeight: '600',
+      display: 'block',
+      margin: ['', '16px 0 8px', '14px 0 6px', '10px 0 4px', '8px 0 2px', '6px 0 2px', '4px 0 2px'][this.level],
+      color: 'var(--text-primary)',
+      lineHeight: '1.3',
+      borderBottom: this.level <= 2 ? '0.5px solid var(--border-light)' : 'none',
+      paddingBottom: this.level <= 2 ? '6px' : '0',
+    });
     el.textContent = this.text;
     return el;
   }
@@ -32,33 +31,35 @@ export function headingDecorations(view: EditorView): Range<Decoration>[] {
   tree.iterate({
     enter(nodeRef) {
       const name = nodeRef.name;
-      // Lezer markdown uses "ATXHeading1" through "ATXHeading6" and "SetextHeading1/2"
-      const isHeading = name.startsWith('ATXHeading') || name.startsWith('SetextHeading');
-      if (!isHeading) return;
+      if (!name.startsWith('ATXHeading') && !name.startsWith('SetextHeading')) return;
       if (cursor >= nodeRef.from && cursor <= nodeRef.to) return;
 
       const doc = view.state.doc;
       const line = doc.lineAt(nodeRef.from);
       const raw = line.text;
-      // Strip leading # markers and trailing optional setext underline
-      const text = raw.replace(/^#{1,6}\s+/, '').replace(/\s*[=]+\s*$/, '').replace(/\s*[-]+\s*$/, '').trim();
 
-      // Determine level
+      // Extract heading level and text
       let level = 1;
-      if (name.includes('ATXHeading')) {
-        level = parseInt(name.replace('ATXHeading', '')) || 1;
+      let text = raw;
+
+      if (name.startsWith('ATXHeading')) {
+        level = parseInt(name.replace('ATXHeading', ''), 10) || 1;
+        text = raw.replace(/^#{1,6}\s*/, '');
       } else if (name === 'SetextHeading1') {
         level = 1;
+        text = raw.replace(/\s*=+\s*$/, '');
       } else if (name === 'SetextHeading2') {
         level = 2;
+        text = raw.replace(/\s*-+\s*$/, '');
       }
 
       // Hide source line
       widgets.push(Decoration.line({ class: 'cm-line-hidden' }).range(line.from));
 
+      // Show rendered heading
       widgets.push(
         Decoration.replace({
-          widget: new HeadingWidget(level, text),
+          widget: new HeadingWidget(level, text || ' '),
           block: true,
         }).range(line.from, line.from)
       );
